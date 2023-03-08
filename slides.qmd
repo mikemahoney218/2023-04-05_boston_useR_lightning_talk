@@ -1,0 +1,319 @@
+---
+title: "spatialsample:"
+subtitle: "A tidy approach to spatial cross-validation"
+author:
+  - name: "**Michael J Mahoney**"
+    orcid: 0000-0003-2402-304X
+    email: mjmahone@esf.edu
+    url: https://mm218.dev
+format: 
+  revealjs: 
+    standalone: true
+    center: true
+    slide-number: false
+    overview: true
+    width: 1280
+    height: 720
+    theme: [default, custom.scss]
+    footer: "spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023"
+---
+
+```{r setup, include = FALSE, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(
+  digits = 3,
+  comment = "#>",
+  dev = "ragg_png",
+  echo = TRUE
+)
+
+library(ggplot2)
+theme_set(theme_bw())
+options(cli.width = 70)
+
+data_color <- "#1a162d"
+test_color  <- "#325d88"
+train_color <- "#767381"
+assess_color <- "#84cae1"
+splits_pal <- c(data_color, train_color, test_color)
+```
+
+
+# About Me
+
+:::: {.columns}
+::: {.column width="50%"}
+
+- Mike Mahoney
+
+- PhD Candidate at SUNY-ESF
+
+- Focusing on visualization, VR and ML as ways to think about large-scale systems
+
+- These slides: [mm218.dev/boston_useR_2023](https://mm218.dev/boston_useR_2023)
+
+:::
+
+::: {.column width="10%"}
+:::
+
+::: {.column width="40%"}
+
+![](me.jpeg)
+
+:::
+::::
+
+---
+
+```{r echo = FALSE, dev = "svglite"}
+set.seed(123)
+one_split <- dplyr::slice(iris, 1:30) |> 
+  rsample::initial_split() |> 
+  generics::tidy() |> 
+  dplyr::add_row(Row = 1:30, Data = "Original") |> 
+  dplyr::mutate(Data = dplyr::case_when(
+    Data == "Analysis" ~ "Training",
+    Data == "Assessment" ~ "Testing",
+    TRUE ~ Data
+  )) |> 
+  dplyr::mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
+all_split <-
+  ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            linewidth = 1) + 
+  scale_fill_manual(values = splits_pal, guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+---
+
+```{r echo = FALSE}
+set.seed(123)
+one_split <- dplyr::slice(iris, 1:30) |> 
+  rsample::initial_split() |> 
+  generics::tidy() |> 
+  dplyr::add_row(Row = 1:30, Data = "Original") |> 
+  dplyr::group_by(Data) |> 
+  dplyr::mutate(
+    Data = ifelse(
+      Data == "Analysis", 
+      paste(
+        "Fold",
+        sample(
+          rep(1:5, length.out = nrow(dplyr::pick(dplyr::everything())))
+        )
+      ),
+      ifelse(Data == "Assessment", "Testing", "Original")
+    )
+  ) |> 
+  dplyr::mutate(Data = factor(
+    Data, 
+    levels = c(
+      "Original", 
+      "Fold 1", 
+      "Fold 2", 
+      "Fold 3", 
+      "Fold 4", 
+      "Fold 5", 
+      "Testing"
+    )
+  )
+)
+all_split <-
+  ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            linewidth = 1) + 
+  scale_fill_manual(values = c(data_color, RColorBrewer::brewer.pal(5, "Pastel1"), test_color), guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+---
+
+```{r vfold_gif, animation.hook="gifski", echo = FALSE}
+purrr::walk(
+  list(
+    c(assess_color, rep(train_color, 4)),
+    c(rep(train_color, 1), assess_color, rep(train_color, 3)),
+    c(rep(train_color, 2), assess_color, rep(train_color, 2)),
+    c(rep(train_color, 3), assess_color, rep(train_color, 1)),
+    c(rep(train_color, 4), assess_color)
+  ),
+  \(color) {
+    all_split <- 
+      ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
+      geom_tile(color = "white",
+                linewidth = 1) + 
+      scale_fill_manual(values = c(
+        data_color, 
+        color, 
+        test_color
+      ), 
+      guide = "none") +
+      theme_minimal() +
+      theme(axis.text.y = element_text(size = rel(2)),
+            axis.text.x = element_blank(),
+            legend.position = "top",
+            panel.grid = element_blank()) +
+      coord_equal(ratio = 1) +
+      labs(x = NULL, y = NULL)
+    print(all_split)
+  }
+)
+```
+
+
+---
+
+```{r}
+data(boston_canopy, package = "spatialsample")
+ggplot(boston_canopy, aes(fill = canopy_area_2019)) + 
+  geom_sf() + 
+  scale_fill_distiller(name = "Canopy area (2019)", palette = "YlGn", direction = 1)
+```
+
+---
+
+```{r, eval = FALSE}
+rsample::vfold_cv(boston_canopy, v = 5)
+```
+
+```{r first_vfold, dev = "svglite", echo = FALSE}
+set.seed(1234)
+folds <- spatialsample::spatial_buffer_vfold_cv(
+  boston_canopy, 
+  v = 5, 
+  radius = NULL, 
+  buffer = NULL
+)
+
+autoplot(folds)
+```
+
+---
+
+```{r}
+library(spatialsample)
+set.seed(1234)
+folds <- spatial_clustering_cv(boston_canopy, v = 5)
+folds
+```
+
+---
+
+```{r boston_clusters, dev = "svglite"}
+autoplot(folds)
+```
+
+---
+
+```{r boston_clusters_gif, animation.hook="gifski"}
+library(purrr)
+walk(folds$splits, function(x) print(autoplot(x)))
+```
+
+---
+
+```{r}
+set.seed(1234)
+folds <- spatial_block_cv(boston_canopy, v = 5, n = c(10, 10))
+folds
+```
+
+---
+
+```{r boston_blocks, dev = "svglite"}
+autoplot(folds)
+```
+
+---
+
+```{r boston_blocks_gif, animation.hook="gifski"}
+walk(folds$splits, function(x) print(autoplot(x)))
+```
+
+---
+
+```{r}
+set.seed(1234)
+folds <- spatial_buffer_vfold_cv(
+  boston_canopy, 
+  v = 5, 
+  radius = NULL, 
+  buffer = NULL
+)
+folds
+```
+
+---
+
+```{r boston_vfold, dev = "svglite"}
+autoplot(folds)
+```
+
+---
+
+```{r boston_vfold_gif, animation.hook="gifski"}
+walk(folds$splits, function(x) print(autoplot(x)))
+```
+
+---
+
+```{r}
+folds <- spatial_buffer_vfold_cv(
+  boston_canopy, 
+  v = Inf, 
+  radius = 1500,
+  buffer = 1500
+)
+
+folds |> head(5)
+```
+
+---
+
+```{r boston_vfold_all_gif_fake, animation.hook="gifski", eval=FALSE}
+walk(folds$splits, function(x) print(autoplot(x)))
+```
+
+```{r boston_vfold_all_gif, animation.hook="gifski", echo=FALSE}
+walk(head(folds$splits, 30), function(x) print(autoplot(x)))
+```
+
+---
+
+```{r}
+folds <- spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)
+walk(folds$splits, function(x) print(autoplot(x)))
+```
+
+---
+
+## Thank you!
+
+<br />
+
+#### Find me online:
+
+{{< fa globe >}} [mm218.dev](https://mm218.dev) 
+
+{{< fa brands github >}} @mikemahoney218 
+
+<i class="fab fa-mastodon"></i> [@MikeMahoney218@fosstodon.org](https://fosstodon.org/@MikeMahoney218)
+
+<br />
+
+Slides available at [mm218.dev/boston_useR_2023](https://mm218.dev/boston_useR_2023)

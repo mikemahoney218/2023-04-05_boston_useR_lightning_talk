@@ -1,0 +1,37 @@
+/*-- scss:defaults --*/
+
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,500;1,500&display=swap');
+
+// Our colors
+$links: #325d88;
+$text: #3e3f3a;
+
+// fonts
+$font-family-sans-serif: 'Jost', sans-serif !default;
+$font-family-serif: 'Zilla Slab', serif !default;
+
+// colors
+$body-bg: white !default;
+$body-color: $text !default;
+$link-color: $links !default;
+
+// headings
+$presentation-heading-font: 'DM Sans', sans-serif !default;
+$presentation-heading-color: $text !default;
+
+/*-- scss:rules --*/
+
+// Annotation link
+.annotation-link {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  font-size: 75px;
+}
+
+// When `#| output-location: column` is set, it is no longer 100% height
+.reveal .column-output-location .column:first-of-type div.sourceCode {
+  height: unset !important;
+}
