@@ -65,35 +65,6 @@ splits_pal <- c(data_color, train_color, test_color)
 
 ## Cross-validation:
 
-```{r echo = FALSE, dev = "svglite"}
-set.seed(123)
-one_split <- dplyr::slice(iris, 1:30) |> 
-  rsample::initial_split() |> 
-  generics::tidy() |> 
-  dplyr::add_row(Row = 1:30, Data = "Original") |> 
-  dplyr::mutate(Data = dplyr::case_when(
-    Data == "Analysis" ~ "Training",
-    Data == "Assessment" ~ "Testing",
-    TRUE ~ Data
-  )) |> 
-  dplyr::mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
-all_split <-
-  ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
-  geom_tile(color = "white",
-            linewidth = 1) + 
-  scale_fill_manual(values = splits_pal, guide = "none") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = rel(2)),
-        axis.text.x = element_blank(),
-        legend.position = "top",
-        panel.grid = element_blank()) +
-  coord_equal(ratio = 1) +
-  labs(x = NULL, y = NULL)
-all_split
-```
-
-## Cross-validation:
-
 ```{r vfold_gif, animation.hook="gifski", echo = FALSE}
 set.seed(123)
 one_split <- dplyr::slice(iris, 1:30) |> 
@@ -251,13 +222,6 @@ walk(head(folds$splits, 30), function(x) print(autoplot(x)))
 
 ---
 
-```{r boston_buffer_all_gif, animation.hook="gifski", echo=FALSE}
-folds <- spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)
-walk(folds$splits, function(x) print(autoplot(x)))
-```
-
----
-
 ![](fig-comparisons-1.png){.quarto-figure-center}
 
 https://doi.org/FILL_ME_IN
@@ -291,3 +255,5 @@ https://doi.org/FILL_ME_IN
 <br />
 
 Slides available at [mm218.dev/boston_useR_2023](https://mm218.dev/boston_useR_2023)
+
+More spatialsample: [https://spatialsample.tidymodels.org/](https://spatialsample.tidymodels.org/)
