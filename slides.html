@@ -6,7 +6,9 @@
 <script src="slides_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="slides_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="slides_files/libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
-<link href="slides_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+<link href="slides_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="slides_files/libs/quarto-contrib/fontawesome6-0.1.0/all.css" rel="stylesheet">
+<link href="slides_files/libs/quarto-contrib/fontawesome6-0.1.0/latex-fontsize.css" rel="stylesheet"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.2.335">
 
   <meta name="author" content="Michael J Mahoney">
@@ -403,15 +405,14 @@
 </div>
 
 </section>
-<section>
-<section id="about-me" class="title-slide slide level1 center">
-<h1>About Me</h1>
+<section id="about-me" class="slide level2 center">
+<h2>About Me</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
 <ul>
 <li><p>Mike Mahoney</p></li>
-<li><p>PhD Candidate at SUNY-ESF</p></li>
-<li><p>Focusing on visualization, VR and ML as ways to think about large-scale systems</p></li>
+<li><p>PhD candidate at SUNY-ESF</p></li>
+<li><p>2022 summer intern with Posit (spatialsample, rsample)</p></li>
 <li><p>These slides: <a href="https://mm218.dev/boston_useR_2023">mm218.dev/boston_useR_2023</a></p></li>
 </ul>
 </div><div class="column" style="width:10%;">
@@ -421,206 +422,130 @@
 </div>
 </div>
 </section>
-<section class="slide level2 center">
-
+<section id="cross-validation" class="slide level2 center">
+<h2>Cross-validation:</h2>
 
 <img data-src="slides_files/figure-revealjs/unnamed-chunk-1-1.svg" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
-
-<img data-src="slides_files/figure-revealjs/unnamed-chunk-2-1.png" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<section id="cross-validation-1" class="slide level2 center">
+<h2>Cross-validation:</h2>
 
 <img data-src="slides_files/figure-revealjs/vfold_gif-.gif" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<section id="rsample-and-friends" class="slide level2 center">
+<h2>rsample and friends</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">data</span>(boston_canopy, <span class="at">package =</span> <span class="st">"spatialsample"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">ggplot</span>(boston_canopy, <span class="fu">aes</span>(<span class="at">fill =</span> canopy_area_2019)) <span class="sc">+</span> </span>
-<span id="cb1-3"><a href="#cb1-3"></a>  <span class="fu">geom_sf</span>() <span class="sc">+</span> </span>
-<span id="cb1-4"><a href="#cb1-4"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Canopy area (2019)"</span>, <span class="at">palette =</span> <span class="st">"YlGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a href="#cb1-2"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 6 × 2
+#&gt;   splits           id    
+#&gt;   &lt;list&gt;           &lt;chr&gt; 
+#&gt; 1 &lt;split [613/69]&gt; Fold01
+#&gt; 2 &lt;split [613/69]&gt; Fold02
+#&gt; 3 &lt;split [614/68]&gt; Fold03
+#&gt; 4 &lt;split [614/68]&gt; Fold04
+#&gt; 5 &lt;split [614/68]&gt; Fold05
+#&gt; 6 &lt;split [614/68]&gt; Fold06</code></pre>
+</div>
+</div>
+<div class="fragment">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb3-4"><a href="#cb3-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb3-5"><a href="#cb3-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 6
+#&gt;   .metric .estimator       mean     n    std_err .config             
+#&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;               
+#&gt; 1 rmse    standard   377089.       10 20426.     Preprocessor1_Model1
+#&gt; 2 rsq     standard        0.353    10     0.0178 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="what-does-new-data-mean" class="slide level2 center">
+<h2>What does “new data” mean?</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">ggplot</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="fu">aes</span>(<span class="at">fill =</span> canopy_area_2019)) <span class="sc">+</span> <span class="fu">geom_sf</span>() <span class="sc">+</span> </span>
+<span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Canopy area (2019)"</span>, <span class="at">palette =</span> <span class="st">"YlGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="slides_files/figure-revealjs/unnamed-chunk-3-1.png" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<img data-src="slides_files/figure-revealjs/unnamed-chunk-4-1.svg" width="960" class="r-stretch"></section>
+<section id="are-these-folds-really-unrelated" class="slide level2 center">
+<h2>Are these folds really unrelated?</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/first_vfold-1.svg" width="960" class="r-stretch"></section>
 <section class="slide level2 center">
 
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">library</span>(spatialsample)</span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb3-3"><a href="#cb3-3"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb3-4"><a href="#cb3-4"></a>folds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>#&gt; #  5-fold spatial cross-validation 
-#&gt; # A tibble: 5 × 2
-#&gt;   splits            id   
-#&gt;   &lt;list&gt;            &lt;chr&gt;
-#&gt; 1 &lt;split [604/78]&gt;  Fold1
-#&gt; 2 &lt;split [595/87]&gt;  Fold2
-#&gt; 3 &lt;split [524/158]&gt; Fold3
-#&gt; 4 &lt;split [490/192]&gt; Fold4
-#&gt; 5 &lt;split [515/167]&gt; Fold5</code></pre>
-</div>
-</div>
-</section>
-<section class="slide level2 center">
 
+<img data-src="https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png" class="quarto-figure-center r-stretch"></section>
+<section id="spatial-clustering" class="slide level2 center">
+<h2>Spatial clustering</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">autoplot</span>(folds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">library</span>(spatialsample)</span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+
 <img data-src="slides_files/figure-revealjs/boston_clusters-1.svg" width="960" class="r-stretch"></section>
 <section class="slide level2 center">
 
 <div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">library</span>(purrr)</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="fu">walk</span>(<span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="slides_files/figure-revealjs/boston_clusters_gif-.gif" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<section id="spatial-blocking" class="slide level2 center">
+<h2>Spatial blocking</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb7-2"><a href="#cb7-2"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span>
-<span id="cb7-3"><a href="#cb7-3"></a>folds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>#&gt; #  5-fold spatial block cross-validation 
-#&gt; # A tibble: 5 × 2
-#&gt;   splits            id   
-#&gt;   &lt;list&gt;            &lt;chr&gt;
-#&gt; 1 &lt;split [525/157]&gt; Fold1
-#&gt; 2 &lt;split [539/143]&gt; Fold2
-#&gt; 3 &lt;split [548/134]&gt; Fold3
-#&gt; 4 &lt;split [544/138]&gt; Fold4
-#&gt; 5 &lt;split [572/110]&gt; Fold5</code></pre>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</section>
-<section class="slide level2 center">
 
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">autoplot</span>(folds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-
-</div>
 <img data-src="slides_files/figure-revealjs/boston_blocks-1.svg" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
-<div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-
-</div>
-<img data-src="slides_files/figure-revealjs/boston_blocks_gif-.gif" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<section id="spatial-lodo" class="slide level2 center">
+<h2>Spatial LODO</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb11-2"><a href="#cb11-2"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(</span>
-<span id="cb11-3"><a href="#cb11-3"></a>  boston_canopy, </span>
-<span id="cb11-4"><a href="#cb11-4"></a>  <span class="at">v =</span> <span class="dv">5</span>, </span>
-<span id="cb11-5"><a href="#cb11-5"></a>  <span class="at">radius =</span> <span class="cn">NULL</span>, </span>
-<span id="cb11-6"><a href="#cb11-6"></a>  <span class="at">buffer =</span> <span class="cn">NULL</span></span>
-<span id="cb11-7"><a href="#cb11-7"></a>)</span>
-<span id="cb11-8"><a href="#cb11-8"></a>folds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>#&gt; #  5-fold spatial cross-validation 
-#&gt; # A tibble: 5 × 2
-#&gt;   splits            id   
-#&gt;   &lt;list&gt;            &lt;chr&gt;
-#&gt; 1 &lt;split [545/137]&gt; Fold1
-#&gt; 2 &lt;split [545/137]&gt; Fold2
-#&gt; 3 &lt;split [546/136]&gt; Fold3
-#&gt; 4 &lt;split [546/136]&gt; Fold4
-#&gt; 5 &lt;split [546/136]&gt; Fold5</code></pre>
-</div>
-</div>
-</section>
-<section class="slide level2 center">
-
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">autoplot</span>(folds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-
-</div>
-<img data-src="slides_files/figure-revealjs/boston_vfold-1.svg" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
-<div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-
-</div>
-<img data-src="slides_files/figure-revealjs/boston_vfold_gif-.gif" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(</span>
-<span id="cb15-2"><a href="#cb15-2"></a>  boston_canopy, </span>
-<span id="cb15-3"><a href="#cb15-3"></a>  <span class="at">v =</span> <span class="cn">Inf</span>, </span>
-<span id="cb15-4"><a href="#cb15-4"></a>  <span class="at">radius =</span> <span class="dv">1500</span>,</span>
-<span id="cb15-5"><a href="#cb15-5"></a>  <span class="at">buffer =</span> <span class="dv">1500</span></span>
-<span id="cb15-6"><a href="#cb15-6"></a>)</span>
-<span id="cb15-7"><a href="#cb15-7"></a></span>
-<span id="cb15-8"><a href="#cb15-8"></a>folds <span class="sc">|&gt;</span> <span class="fu">head</span>(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>#&gt; # A tibble: 5 × 2
-#&gt;   splits           id     
-#&gt;   &lt;list&gt;           &lt;chr&gt;  
-#&gt; 1 &lt;split [643/13]&gt; Fold001
-#&gt; 2 &lt;split [641/13]&gt; Fold002
-#&gt; 3 &lt;split [654/9]&gt;  Fold003
-#&gt; 4 &lt;split [664/5]&gt;  Fold004
-#&gt; 5 &lt;split [651/13]&gt; Fold005</code></pre>
-</div>
-</div>
-</section>
-<section class="slide level2 center">
-
-<div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="cn">Inf</span>, <span class="at">radius =</span> <span class="dv">1500</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_vfold_all_gif-.gif" width="960" class="r-stretch"></section>
 <section class="slide level2 center">
 
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
-<span id="cb18-2"><a href="#cb18-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img data-src="slides_files/figure-revealjs/unnamed-chunk-9-1.png" width="960"></p>
-</div>
-<div class="cell-output-display">
-<p><img data-src="slides_files/figure-revealjs/unnamed-chunk-9-2.png" width="960"></p>
-</div>
-<div class="cell-output-display">
-<p><img data-src="slides_files/figure-revealjs/unnamed-chunk-9-3.png" width="960"></p>
-</div>
-<div class="cell-output-display">
-<p><img data-src="slides_files/figure-revealjs/unnamed-chunk-9-4.png" width="960"></p>
-</div>
-<div class="cell-output-display">
-<p><img data-src="slides_files/figure-revealjs/unnamed-chunk-9-5.png" width="960"></p>
-</div>
-</div>
+
+<img data-src="slides_files/figure-revealjs/boston_buffer_all_gif-.gif" width="960" class="r-stretch"></section>
+<section class="slide level2 center">
+
+
+<img data-src="fig-comparisons-1.png" class="quarto-figure-center r-stretch"><p>https://doi.org/FILL_ME_IN</p>
+</section>
+<section id="other-features" class="slide level2 center">
+<h2>Other features:</h2>
+<p><br></p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Works with projected &amp; geographic CRS</p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Handles mismatched CRS</p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Aware of CRS units, arguments accept explicit units</p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Handles all geometry types<span class="math inline">\(^*\)</span></p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Integrates with the rest of tidymodels</p>
 </section>
 <section id="thank-you" class="slide level2 center">
 <h2>Thank you!</h2>
 <p><br></p>
 <h4 id="find-me-online">Find me online:</h4>
-<p> <a href="https://mm218.dev">mm218.dev</a></p>
-<p> <span class="citation" data-cites="mikemahoney218">@mikemahoney218</span></p>
+<p><i class="fa-solid fa-globe" aria-label="globe"></i> <a href="https://mm218.dev">mm218.dev</a></p>
+<p><i class="fa-brands fa-github" aria-label="github"></i> <span class="citation" data-cites="mikemahoney218">@mikemahoney218</span></p>
 <p><i class="fab fa-mastodon"></i> <a href="https://fosstodon.org/@MikeMahoney218"><span class="citation" data-cites="MikeMahoney218">@MikeMahoney218</span><span class="citation" data-cites="fosstodon.org">@fosstodon.org</span></a></p>
 <p><br></p>
 <p>Slides available at <a href="https://mm218.dev/boston_useR_2023">mm218.dev/boston_useR_2023</a></p>
 <div class="footer footer-default">
 <p>spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023</p>
 </div>
-</section></section>
+</section>
     </div>
   </div>
 

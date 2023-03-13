@@ -38,16 +38,16 @@ splits_pal <- c(data_color, train_color, test_color)
 ```
 
 
-# About Me
+## About Me
 
 :::: {.columns}
 ::: {.column width="50%"}
 
 - Mike Mahoney
 
-- PhD Candidate at SUNY-ESF
+- PhD candidate at SUNY-ESF
 
-- Focusing on visualization, VR and ML as ways to think about large-scale systems
+- 2022 summer intern with Posit (spatialsample, rsample)
 
 - These slides: [mm218.dev/boston_useR_2023](https://mm218.dev/boston_useR_2023)
 
@@ -63,7 +63,7 @@ splits_pal <- c(data_color, train_color, test_color)
 :::
 ::::
 
----
+## Cross-validation:
 
 ```{r echo = FALSE, dev = "svglite"}
 set.seed(123)
@@ -92,9 +92,9 @@ all_split <-
 all_split
 ```
 
----
+## Cross-validation:
 
-```{r echo = FALSE}
+```{r vfold_gif, animation.hook="gifski", echo = FALSE}
 set.seed(123)
 one_split <- dplyr::slice(iris, 1:30) |> 
   rsample::initial_split() |> 
@@ -126,24 +126,7 @@ one_split <- dplyr::slice(iris, 1:30) |>
     )
   )
 )
-all_split <-
-  ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
-  geom_tile(color = "white",
-            linewidth = 1) + 
-  scale_fill_manual(values = c(data_color, RColorBrewer::brewer.pal(5, "Pastel1"), test_color), guide = "none") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = rel(2)),
-        axis.text.x = element_blank(),
-        legend.position = "top",
-        panel.grid = element_blank()) +
-  coord_equal(ratio = 1) +
-  labs(x = NULL, y = NULL)
-all_split
-```
 
----
-
-```{r vfold_gif, animation.hook="gifski", echo = FALSE}
 purrr::walk(
   list(
     c(assess_color, rep(train_color, 4)),
@@ -175,26 +158,41 @@ purrr::walk(
 )
 ```
 
-
----
+## rsample and friends
 
 ```{r}
-data(boston_canopy, package = "spatialsample")
-ggplot(boston_canopy, aes(fill = canopy_area_2019)) + 
-  geom_sf() + 
+library(tidymodels)
+rsample::vfold_cv(spatialsample::boston_canopy) |> head()
+```
+
+. . .
+
+```{r}
+workflow() |> 
+  add_model(linear_reg()) |> 
+  add_formula(canopy_area_2019 ~ land_area * mean_temp) |> 
+  fit_resamples(vfold_cv(spatialsample::boston_canopy)) |> 
+  collect_metrics()
+```
+
+
+## What does "new data" mean?
+
+```{r dev = "svglite"}
+ggplot(spatialsample::boston_canopy, aes(fill = canopy_area_2019)) + geom_sf() + 
   scale_fill_distiller(name = "Canopy area (2019)", palette = "YlGn", direction = 1)
 ```
 
----
+## Are these folds really unrelated?
 
 ```{r, eval = FALSE}
-rsample::vfold_cv(boston_canopy, v = 5)
+rsample::vfold_cv(spatialsample::boston_canopy, v = 5)
 ```
 
 ```{r first_vfold, dev = "svglite", echo = FALSE}
 set.seed(1234)
 folds <- spatialsample::spatial_buffer_vfold_cv(
-  boston_canopy, 
+  spatialsample::boston_canopy, 
   v = 5, 
   radius = NULL, 
   buffer = NULL
@@ -205,102 +203,78 @@ autoplot(folds)
 
 ---
 
-```{r}
+![](https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png){.quarto-figure-center}
+
+
+## Spatial clustering
+
+```{r, eval = FALSE}
 library(spatialsample)
 set.seed(1234)
-folds <- spatial_clustering_cv(boston_canopy, v = 5)
-folds
+spatial_clustering_cv(boston_canopy, v = 5)
 ```
 
----
-
-```{r boston_clusters, dev = "svglite"}
-autoplot(folds)
+```{r boston_clusters, dev = "svglite", echo = FALSE}
+library(spatialsample)
+set.seed(1234)
+autoplot(spatial_clustering_cv(boston_canopy, v = 5))
 ```
 
 ---
 
 ```{r boston_clusters_gif, animation.hook="gifski"}
 library(purrr)
-walk(folds$splits, function(x) print(autoplot(x)))
+walk(spatial_clustering_cv(boston_canopy, v = 5)$splits, function(x) print(autoplot(x)))
 ```
 
----
+## Spatial blocking
 
-```{r}
-set.seed(1234)
-folds <- spatial_block_cv(boston_canopy, v = 5, n = c(10, 10))
-folds
+```{r, eval = FALSE}
+spatial_block_cv(boston_canopy, v = 5, n = c(10, 10))
 ```
 
----
-
-```{r boston_blocks, dev = "svglite"}
-autoplot(folds)
+```{r boston_blocks, dev = "svglite", echo = FALSE}
+autoplot(spatial_block_cv(boston_canopy, v = 5, n = c(10, 10)))
 ```
 
----
+## Spatial LODO
 
-```{r boston_blocks_gif, animation.hook="gifski"}
-walk(folds$splits, function(x) print(autoplot(x)))
-```
-
----
-
-```{r}
-set.seed(1234)
-folds <- spatial_buffer_vfold_cv(
-  boston_canopy, 
-  v = 5, 
-  radius = NULL, 
-  buffer = NULL
-)
-folds
-```
-
----
-
-```{r boston_vfold, dev = "svglite"}
-autoplot(folds)
-```
-
----
-
-```{r boston_vfold_gif, animation.hook="gifski"}
-walk(folds$splits, function(x) print(autoplot(x)))
-```
-
----
-
-```{r}
-folds <- spatial_buffer_vfold_cv(
-  boston_canopy, 
-  v = Inf, 
-  radius = 1500,
-  buffer = 1500
-)
-
-folds |> head(5)
-```
-
----
-
-```{r boston_vfold_all_gif_fake, animation.hook="gifski", eval=FALSE}
+```{r boston_vfold_all_gif_fake, eval=FALSE}
+folds <- spatial_buffer_vfold_cv(boston_canopy, v = Inf, radius = 1500, buffer = 1500)
 walk(folds$splits, function(x) print(autoplot(x)))
 ```
 
 ```{r boston_vfold_all_gif, animation.hook="gifski", echo=FALSE}
+folds <- spatial_buffer_vfold_cv(boston_canopy, v = Inf, radius = 1500, buffer = 1500)
 walk(head(folds$splits, 30), function(x) print(autoplot(x)))
 ```
 
 ---
 
-```{r}
+```{r boston_buffer_all_gif, animation.hook="gifski", echo=FALSE}
 folds <- spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)
 walk(folds$splits, function(x) print(autoplot(x)))
 ```
 
 ---
+
+![](fig-comparisons-1.png){.quarto-figure-center}
+
+https://doi.org/FILL_ME_IN
+
+## Other features:
+
+<br />
+
+{{< fa square-check >}}  Works with projected & geographic CRS
+
+{{< fa square-check >}} Handles mismatched CRS 
+
+{{< fa square-check >}} Aware of CRS units, arguments accept explicit units
+
+{{< fa square-check >}} Handles all geometry types$^*$
+
+{{< fa square-check >}} Integrates with the rest of tidymodels
 
 ## Thank you!
 
