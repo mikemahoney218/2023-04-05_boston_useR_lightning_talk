@@ -224,7 +224,9 @@ walk(head(folds$splits, 30), function(x) print(autoplot(x)))
 
 ![](fig-comparisons-1.png){.quarto-figure-center}
 
-https://doi.org/FILL_ME_IN
+<br />
+
+[https://doi.org/10.48550/arXiv.2303.07334](https://doi.org/10.48550/arXiv.2303.07334)
 
 ## Other features:
 
