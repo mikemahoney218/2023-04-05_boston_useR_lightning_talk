@@ -37,7 +37,6 @@ assess_color <- "#84cae1"
 splits_pal <- c(data_color, train_color, test_color)
 ```
 
-
 ## About Me
 
 :::: {.columns}
@@ -45,7 +44,7 @@ splits_pal <- c(data_color, train_color, test_color)
 
 - Mike Mahoney
 
-- PhD candidate at SUNY-ESF
+- PhD candidate in environmental science
 
 - 2022 summer intern with Posit (spatialsample, rsample)
 
@@ -63,9 +62,13 @@ splits_pal <- c(data_color, train_color, test_color)
 :::
 ::::
 
-## Cross-validation:
+:::{.notes}
+Before I get into that, I want to introduce myself quickly -- I'm Mike and I'm currently a PhD candidate in environmental science, but the work I'm going to talk about today actually comes from this past summer when I was an intern with the tidymodels team at Posit working on cross validation in tidymodels.
+:::
 
-```{r vfold_gif, animation.hook="gifski", echo = FALSE}
+## Data splitting:
+
+```{r data_split, dev='svglite', echo = FALSE}
 set.seed(123)
 one_split <- dplyr::slice(iris, 1:30) |> 
   rsample::initial_split() |> 
@@ -73,7 +76,7 @@ one_split <- dplyr::slice(iris, 1:30) |>
   dplyr::add_row(Row = 1:30, Data = "Original") |> 
   dplyr::group_by(Data) |> 
   dplyr::mutate(
-    Data = ifelse(
+    cv = ifelse(
       Data == "Analysis", 
       paste(
         "Fold",
@@ -84,20 +87,74 @@ one_split <- dplyr::slice(iris, 1:30) |>
       ifelse(Data == "Assessment", "Testing", "Original")
     )
   ) |> 
-  dplyr::mutate(Data = factor(
-    Data, 
-    levels = c(
-      "Original", 
-      "Fold 1", 
-      "Fold 2", 
-      "Fold 3", 
-      "Fold 4", 
-      "Fold 5", 
-      "Testing"
+  dplyr::mutate(
+    Data = factor(
+      Data,
+      levels = c(
+        "Original",
+        "Analysis",
+        "Assessment"
+      ),
+      labels = c(
+        "Original",
+        "Training",
+        "Testing"
+      )
+    ),
+    cv = factor(
+      cv, 
+      levels = c(
+        "Original", 
+        "Fold 1", 
+        "Fold 2", 
+        "Fold 3", 
+        "Fold 4", 
+        "Fold 5", 
+        "Testing"
+      )
     )
   )
-)
+data_split <- ggplot(
+  one_split, 
+  aes(x = Row, y = forcats::fct_rev(Data), fill = Data)
+) + 
+  geom_tile(color = "white",
+            linewidth = 1) + 
+  scale_fill_manual(values = c(
+    data_color, 
+    train_color,
+    test_color
+  ), 
+  guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+print(data_split)
+```
 
+::: footer
+Figure adapted from <a href="https://workshops.tidymodels.org/">https://workshops.tidymodels.org/</a>
+
+spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023
+:::
+
+---
+
+![](modeling-process.svg)
+
+::: footer
+Image from <a href="https://www.tmwr.org/software-modeling.html">https://www.tmwr.org/software-modeling.html</a>
+
+spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023
+:::
+
+## Cross-validation:
+
+```{r vfold_gif, animation.hook="gifski", echo = FALSE}
 purrr::walk(
   list(
     c(assess_color, rep(train_color, 4)),
@@ -108,7 +165,7 @@ purrr::walk(
   ),
   \(color) {
     all_split <- 
-      ggplot(one_split, aes(x = Row, y = forcats::fct_rev(Data), fill = Data)) + 
+      ggplot(one_split, aes(x = Row, y = forcats::fct_rev(cv), fill = cv)) + 
       geom_tile(color = "white",
                 linewidth = 1) + 
       scale_fill_manual(values = c(
@@ -129,12 +186,24 @@ purrr::walk(
 )
 ```
 
+:::{.notes}
+And for anyone who isn't familiar, cross validation is a model assessment approach that helps you understand how well your model will predict new data that it hasn't seen before. Normally you'll evaluate your final models against an independent test set, which isn't involved in the model fitting process at all. But if you want to evaluate models that you're still iterating on, you'll normally split your training data into a handful of what we call "folds". You then usually train your model on all but one of those folds, and evaluate it against that final fold, in order to get a sense of how well your intermediate models will do on independent data. Then, when you're finished iterating, you'll train your model on all those folds together and evaluate it against the independent test set.
+:::
+
+::: footer
+Figure adapted from <a href="https://workshops.tidymodels.org/">https://workshops.tidymodels.org/</a>
+
+spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023
+:::
+
 ## rsample and friends
 
 ```{r}
 library(tidymodels)
 rsample::vfold_cv(spatialsample::boston_canopy) |> head()
 ```
+
+<br />
 
 . . .
 
@@ -146,6 +215,9 @@ workflow() |>
   collect_metrics()
 ```
 
+:::{.notes}
+And there's this tidymodels package called rsample that handles that splitting process for you. And the objects that rsample functions return can be used with functions from across the tidymodels ecosystem, which makes it easy to use cross-validation as part of any modeling workflow you might want.
+:::
 
 ## What does "new data" mean?
 
@@ -154,11 +226,17 @@ ggplot(spatialsample::boston_canopy, aes(fill = canopy_area_2019)) + geom_sf() +
   scale_fill_distiller(name = "Canopy area (2019)", palette = "YlGn", direction = 1)
 ```
 
+:::{.notes}
+But a challenge is that most rsample functions assume you can assign your data to folds at random, and still get independent training and test sets. That's true for a lot of data, but starts to break down once your data is no longer entirely independent -- once you start getting autocorrelation between your observations. And for spatial data, you almost always have autocorrelation. For instance, this is a map of tree cover in Boston, and as you can kinda guess tree cover isn't randomly distributed across the city -- down in Stony Brook Park there's a ton of tree cover, up here in Seaport there's a bit less. The tree cover for any one of these hexagons is pretty tightly linked to how much tree cover its neighbors have.
+:::
+
 ## Are these folds really unrelated?
 
 ```{r, eval = FALSE}
 rsample::vfold_cv(spatialsample::boston_canopy, v = 5)
 ```
+
+
 
 ```{r first_vfold, dev = "svglite", echo = FALSE}
 set.seed(1234)
@@ -172,10 +250,17 @@ folds <- spatialsample::spatial_buffer_vfold_cv(
 autoplot(folds)
 ```
 
+:::{.notes}
+And so if you split this up at random, you're going to get pretty highly related training and testing sets, which is probably going to make your model assessments way too optimistic. Your training and testing sets are so similar that you're practically testing with training data.
+:::
+
 ---
 
 ![](https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png){.quarto-figure-center}
 
+:::{.notes}
+So this is where spatialsample comes in. spatialsample is a newer tidymodels package that helps you do spatial cross-validation, where you assign data to folds based on its spatial location rather than just at random.
+:::
 
 ## Spatial clustering
 
@@ -191,12 +276,20 @@ set.seed(1234)
 autoplot(spatial_clustering_cv(boston_canopy, v = 5))
 ```
 
----
+:::{.notes}
+So to give you a sense of what that looks like, this is the output from the spatial_clustering_cv() function. You can see that rather than having our folds all mixed in together, we're assigning folds based on where each of these hexagons are located.
+:::
+
+## Spatial clustering
 
 ```{r boston_clusters_gif, animation.hook="gifski"}
 library(purrr)
 walk(spatial_clustering_cv(boston_canopy, v = 5)$splits, function(x) print(autoplot(x)))
 ```
+
+:::{.notes}
+And so rather than training and testing with random data, we're testing on data that's geographically separated from our training data, and so hopefully less related to the testing data.
+:::
 
 ## Spatial blocking
 
@@ -206,6 +299,28 @@ spatial_block_cv(boston_canopy, v = 5, n = c(10, 10))
 
 ```{r boston_blocks, dev = "svglite", echo = FALSE}
 autoplot(spatial_block_cv(boston_canopy, v = 5, n = c(10, 10)))
+```
+
+:::{.notes}
+There's a handful of other methods in spatialsample that are also useful; for instance, spatial_block_cv() lets you split your data up using a regular grid, which is a super popular method in ecology studies.
+:::
+
+## Spatial blocking
+
+```{r boston_block_gif, animation.hook="gifski"}
+walk(spatial_block_cv(boston_canopy, v = 5, n = c(10, 10))$splits,
+     function(x) print(autoplot(x)))
+```
+
+## Spatial blocking
+
+```{r, eval = FALSE}
+spatial_block_cv(boston_canopy, v = 5, n = c(10, 10), 
+                 method = "continuous", relevant_only = FALSE)
+```
+
+```{r boston_blocks_continuous, dev = "svglite", echo = FALSE}
+autoplot(spatial_block_cv(boston_canopy, v = 5, n = c(10, 10), method = "continuous", relevant_only = FALSE))
 ```
 
 ## Spatial LODO
@@ -220,27 +335,76 @@ folds <- spatial_buffer_vfold_cv(boston_canopy, v = Inf, radius = 1500, buffer =
 walk(head(folds$splits, 30), function(x) print(autoplot(x)))
 ```
 
+:::{.notes}
+And we've also got a method we call "leave one disc out", or LODO, where you use all the observations within a certain distance of some point as your test set, and leave all the points within a "buffer" distance of that out entirely. And that buffer is really useful to make sure that you aren't including correlated points in both your training and testing data.
+:::
+
+
+## Buffering
+
+```{r, eval = FALSE}
+spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)
+```
+
+```{r boston_clusters_buffer_gif, animation.hook="gifski", echo=FALSE}
+walk(spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)$splits, function(x) print(autoplot(x)))
+```
+
+:::{.notes}
+And so rather than training and testing with random data, we're testing on data that's geographically separated from our training data, and so hopefully less related to the testing data.
+:::
+
+## tidymodels integration
+
+```{r}
+workflow() |> 
+  add_model(linear_reg()) |> 
+  add_formula(canopy_area_2019 ~ land_area * mean_temp) |> 
+  fit_resamples(vfold_cv(spatialsample::boston_canopy)) |> 
+  collect_metrics()
+```
+
+<br/>
+
+. . .
+
+```{r}
+workflow() |> 
+  add_model(linear_reg()) |> 
+  add_formula(canopy_area_2019 ~ land_area * mean_temp) |> 
+  fit_resamples(spatial_clustering_cv(spatialsample::boston_canopy)) |> 
+  collect_metrics()
+```
+
 ---
 
 ![](fig-comparisons-1.png){.quarto-figure-center}
 
 <br />
 
-[https://doi.org/10.48550/arXiv.2303.07334](https://doi.org/10.48550/arXiv.2303.07334)
+::: {style="font-size: medium;"}
+Mahoney, MJ, Johnson, L. K., Silge, J., Frick, H., Kuhn, M., and Beier, C. M. In Review. Assessing the performance of spatial cross-validation approaches for models of spatially structured data. [https://doi.org/10.48550/arXiv.2303.07334](https://doi.org/10.48550/arXiv.2303.07334)
+:::
+
+:::{.notes}
+And these methods are all typically going to give you a more accurate model assessment when you're working with spatial data than non-spatial cross-validation. This graph is from a preprint we put out last month -- that green zone is the "target" range for RMSE, and you can see that clustered, LODO, and blocked all have more of their distribution in the green zone than normal V-fold cross-validation. 
+:::
 
 ## Other features:
 
 <br />
 
-{{< fa square-check >}}  Works with projected & geographic CRS
+{{< fa square-check >}} Works with projected & geographic CRS
 
-{{< fa square-check >}} Handles mismatched CRS 
+{{< fa square-check >}} Arguments accept explicit units
 
-{{< fa square-check >}} Aware of CRS units, arguments accept explicit units
+{{< fa square-check >}} Aware of CRS units, functions do unit conversion
 
 {{< fa square-check >}} Handles all geometry types$^*$
 
-{{< fa square-check >}} Integrates with the rest of tidymodels
+:::{.notes}
+And last but not least, I wanted to mention that spatialsample is really designed around the idea of helping users fall into what you'd call a pit of success, and so handles a lot of the common edge cases that come up with spatial data -- spatialsample can work with geographic coordinates, with mismatched coordinate reference systems, with different units, with points, polygons, and lines, and generally does what you'd hope spatial software would do. And by building on top of rsample, the objects and functions from spatialsample automatically integrate with the rest of the tidymodels ecosystem too.
+:::
 
 ## Thank you!
 
@@ -259,3 +423,7 @@ walk(head(folds$splits, 30), function(x) print(autoplot(x)))
 Slides available at [mm218.dev/boston_useR_2023](https://mm218.dev/boston_useR_2023)
 
 More spatialsample: [https://spatialsample.tidymodels.org/](https://spatialsample.tidymodels.org/)
+
+:::{.notes}
+So, with that, I want to say thanks! If you have any questions or just want to talk, feel free to say hi after; otherwise, you can find me online at MikeMahoney218 or my website, mm218 dot dev. Thanks!
+:::

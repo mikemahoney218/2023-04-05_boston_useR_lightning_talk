@@ -411,7 +411,7 @@
 <div class="column" style="width:50%;">
 <ul>
 <li><p>Mike Mahoney</p></li>
-<li><p>PhD candidate at SUNY-ESF</p></li>
+<li><p>PhD candidate in environmental science</p></li>
 <li><p>2022 summer intern with Posit (spatialsample, rsample)</p></li>
 <li><p>These slides: <a href="https://mm218.dev/boston_useR_2023">mm218.dev/boston_useR_2023</a></p></li>
 </ul>
@@ -421,11 +421,57 @@
 <p><img data-src="me.jpeg"></p>
 </div>
 </div>
+<aside class="notes">
+<p>Before I get into that, I want to introduce myself quickly – I’m Mike and I’m currently a PhD candidate in environmental science, but the work I’m going to talk about today actually comes from this past summer when I was an intern with the tidymodels team at Posit working on cross validation in tidymodels.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="data-splitting" class="slide level2 center">
+<h2>Data splitting:</h2>
+
+<img data-src="slides_files/figure-revealjs/data_split-1.svg" width="960" class="r-stretch"><div class="footer">
+<p>Figure adapted from <a href="https://workshops.tidymodels.org/">https://workshops.tidymodels.org/</a></p>
+<p>spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023</p>
+</div>
+</section>
+<section class="slide level2 center">
+
+
+<img data-src="modeling-process.svg" class="r-stretch"><div class="footer">
+<p>Image from <a href="https://www.tmwr.org/software-modeling.html">https://www.tmwr.org/software-modeling.html</a></p>
+<p>spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023</p>
+</div>
 </section>
 <section id="cross-validation" class="slide level2 center">
 <h2>Cross-validation:</h2>
 
-<img data-src="slides_files/figure-revealjs/vfold_gif-.gif" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/vfold_gif-.gif" width="960" class="r-stretch"><aside class="notes">
+<p>And for anyone who isn’t familiar, cross validation is a model assessment approach that helps you understand how well your model will predict new data that it hasn’t seen before. Normally you’ll evaluate your final models against an independent test set, which isn’t involved in the model fitting process at all. But if you want to evaluate models that you’re still iterating on, you’ll normally split your training data into a handful of what we call “folds”. You then usually train your model on all but one of those folds, and evaluate it against that final fold, in order to get a sense of how well your intermediate models will do on independent data. Then, when you’re finished iterating, you’ll train your model on all those folds together and evaluate it against the independent test set.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+<div class="footer">
+<p>Figure adapted from <a href="https://workshops.tidymodels.org/">https://workshops.tidymodels.org/</a></p>
+<p>spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023</p>
+</div>
+</section>
 <section id="rsample-and-friends" class="slide level2 center">
 <h2>rsample and friends</h2>
 <div class="cell">
@@ -443,6 +489,7 @@
 #&gt; 6 &lt;split [614/68]&gt; Fold06</code></pre>
 </div>
 </div>
+<p><br></p>
 <div class="fragment">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
@@ -458,6 +505,19 @@
 #&gt; 2 rsq     standard        0.353    10     0.0178 Preprocessor1_Model1</code></pre>
 </div>
 </div>
+<aside class="notes">
+<p>And there’s this tidymodels package called rsample that handles that splitting process for you. And the objects that rsample functions return can be used with functions from across the tidymodels ecosystem, which makes it easy to use cross-validation as part of any modeling workflow you might want.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </div>
 </section>
 <section id="what-does-new-data-mean" class="slide level2 center">
@@ -467,18 +527,57 @@
 <span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Canopy area (2019)"</span>, <span class="at">palette =</span> <span class="st">"YlGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="slides_files/figure-revealjs/unnamed-chunk-3-1.svg" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/unnamed-chunk-3-1.svg" width="960" class="r-stretch"><aside class="notes">
+<p>But a challenge is that most rsample functions assume you can assign your data to folds at random, and still get independent training and test sets. That’s true for a lot of data, but starts to break down once your data is no longer entirely independent – once you start getting autocorrelation between your observations. And for spatial data, you almost always have autocorrelation. For instance, this is a map of tree cover in Boston, and as you can kinda guess tree cover isn’t randomly distributed across the city – down in Stony Brook Park there’s a ton of tree cover, up here in Seaport there’s a bit less. The tree cover for any one of these hexagons is pretty tightly linked to how much tree cover its neighbors have.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="are-these-folds-really-unrelated" class="slide level2 center">
 <h2>Are these folds really unrelated?</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
-<img data-src="slides_files/figure-revealjs/first_vfold-1.svg" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/first_vfold-1.svg" width="960" class="r-stretch"><aside class="notes">
+<p>And so if you split this up at random, you’re going to get pretty highly related training and testing sets, which is probably going to make your model assessments way too optimistic. Your training and testing sets are so similar that you’re practically testing with training data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section class="slide level2 center">
 
 
-<img data-src="https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png" class="quarto-figure-center r-stretch"></section>
+<img data-src="https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png" class="quarto-figure-center r-stretch"><aside class="notes">
+<p>So this is where spatialsample comes in. spatialsample is a newer tidymodels package that helps you do spatial cross-validation, where you assign data to folds based on its spatial location rather than just at random.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="spatial-clustering" class="slide level2 center">
 <h2>Spatial clustering</h2>
 <div class="cell">
@@ -487,44 +586,193 @@
 <span id="cb7-3"><a href="#cb7-3"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
-<img data-src="slides_files/figure-revealjs/boston_clusters-1.svg" width="960" class="r-stretch"></section>
-<section class="slide level2 center">
-
+<img data-src="slides_files/figure-revealjs/boston_clusters-1.svg" width="960" class="r-stretch"><aside class="notes">
+<p>So to give you a sense of what that looks like, this is the output from the spatial_clustering_cv() function. You can see that rather than having our folds all mixed in together, we’re assigning folds based on where each of these hexagons are located.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="spatial-clustering-1" class="slide level2 center">
+<h2>Spatial clustering</h2>
 <div class="cell" data-animation.hook="gifski">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">library</span>(purrr)</span>
 <span id="cb8-2"><a href="#cb8-2"></a><span class="fu">walk</span>(<span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="slides_files/figure-revealjs/boston_clusters_gif-.gif" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/boston_clusters_gif-.gif" width="960" class="r-stretch"><aside class="notes">
+<p>And so rather than training and testing with random data, we’re testing on data that’s geographically separated from our training data, and so hopefully less related to the testing data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="spatial-blocking" class="slide level2 center">
 <h2>Spatial blocking</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
-<img data-src="slides_files/figure-revealjs/boston_blocks-1.svg" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/boston_blocks-1.svg" width="960" class="r-stretch"><aside class="notes">
+<p>There’s a handful of other methods in spatialsample that are also useful; for instance, spatial_block_cv() lets you split your data up using a regular grid, which is a super popular method in ecology studies.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="spatial-blocking-1" class="slide level2 center">
+<h2>Spatial blocking</h2>
+<div class="cell" data-animation.hook="gifski">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">walk</span>(<span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))<span class="sc">$</span>splits,</span>
+<span id="cb10-2"><a href="#cb10-2"></a>     <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+
+</div>
+<img data-src="slides_files/figure-revealjs/boston_block_gif-.gif" width="960" class="r-stretch"></section>
+<section id="spatial-blocking-2" class="slide level2 center">
+<h2>Spatial blocking</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>), </span>
+<span id="cb11-2"><a href="#cb11-2"></a>                 <span class="at">method =</span> <span class="st">"continuous"</span>, <span class="at">relevant_only =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+<img data-src="slides_files/figure-revealjs/boston_blocks_continuous-1.svg" width="960" class="r-stretch"></section>
 <section id="spatial-lodo" class="slide level2 center">
 <h2>Spatial LODO</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="cn">Inf</span>, <span class="at">radius =</span> <span class="dv">1500</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="cn">Inf</span>, <span class="at">radius =</span> <span class="dv">1500</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
-<img data-src="slides_files/figure-revealjs/boston_vfold_all_gif-.gif" width="960" class="r-stretch"></section>
+<img data-src="slides_files/figure-revealjs/boston_vfold_all_gif-.gif" width="960" class="r-stretch"><aside class="notes">
+<p>And we’ve also got a method we call “leave one disc out”, or LODO, where you use all the observations within a certain distance of some point as your test set, and leave all the points within a “buffer” distance of that out entirely. And that buffer is really useful to make sure that you aren’t including correlated points in both your training and testing data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="buffering" class="slide level2 center">
+<h2>Buffering</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+<img data-src="slides_files/figure-revealjs/boston_clusters_buffer_gif-.gif" width="960" class="r-stretch"><aside class="notes">
+<p>And so rather than training and testing with random data, we’re testing on data that’s geographically separated from our training data, and so hopefully less related to the testing data.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="tidymodels-integration" class="slide level2 center">
+<h2>tidymodels integration</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb14-5"><a href="#cb14-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 6
+#&gt;   .metric .estimator       mean     n    std_err .config             
+#&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;               
+#&gt; 1 rmse    standard   378993.       10 18001.     Preprocessor1_Model1
+#&gt; 2 rsq     standard        0.354    10     0.0171 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+<p><br></p>
+<div class="fragment">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">spatial_clustering_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb16-5"><a href="#cb16-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 2 × 6
+#&gt;   .metric .estimator       mean     n     std_err .config             
+#&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt; &lt;chr&gt;               
+#&gt; 1 rmse    standard   934397.       10 549480.     Preprocessor1_Model1
+#&gt; 2 rsq     standard        0.348    10      0.0468 Preprocessor1_Model1</code></pre>
+</div>
+</div>
+</div>
+</section>
 <section class="slide level2 center">
 
 
 <img data-src="fig-comparisons-1.png" class="quarto-figure-center r-stretch"><p><br></p>
-<p><a href="https://doi.org/10.48550/arXiv.2303.07334">https://doi.org/10.48550/arXiv.2303.07334</a></p>
+<div style="font-size: medium;">
+<p>Mahoney, MJ, Johnson, L. K., Silge, J., Frick, H., Kuhn, M., and Beier, C. M. In Review. Assessing the performance of spatial cross-validation approaches for models of spatially structured data. <a href="https://doi.org/10.48550/arXiv.2303.07334">https://doi.org/10.48550/arXiv.2303.07334</a></p>
+</div>
+<aside class="notes">
+<p>And these methods are all typically going to give you a more accurate model assessment when you’re working with spatial data than non-spatial cross-validation. This graph is from a preprint we put out last month – that green zone is the “target” range for RMSE, and you can see that clustered, LODO, and blocked all have more of their distribution in the green zone than normal V-fold cross-validation.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="other-features" class="slide level2 center">
 <h2>Other features:</h2>
 <p><br></p>
 <p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Works with projected &amp; geographic CRS</p>
-<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Handles mismatched CRS</p>
-<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Aware of CRS units, arguments accept explicit units</p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Arguments accept explicit units</p>
+<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Aware of CRS units, functions do unit conversion</p>
 <p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Handles all geometry types<span class="math inline">\(^*\)</span></p>
-<p><i class="fa-solid fa-square-check" aria-label="square-check"></i> Integrates with the rest of tidymodels</p>
+<aside class="notes">
+<p>And last but not least, I wanted to mention that spatialsample is really designed around the idea of helping users fall into what you’d call a pit of success, and so handles a lot of the common edge cases that come up with spatial data – spatialsample can work with geographic coordinates, with mismatched coordinate reference systems, with different units, with points, polygons, and lines, and generally does what you’d hope spatial software would do. And by building on top of rsample, the objects and functions from spatialsample automatically integrate with the rest of the tidymodels ecosystem too.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="thank-you" class="slide level2 center">
 <h2>Thank you!</h2>
@@ -536,6 +784,19 @@
 <p><br></p>
 <p>Slides available at <a href="https://mm218.dev/boston_useR_2023">mm218.dev/boston_useR_2023</a></p>
 <p>More spatialsample: <a href="https://spatialsample.tidymodels.org/">https://spatialsample.tidymodels.org/</a></p>
+<aside class="notes">
+<p>So, with that, I want to say thanks! If you have any questions or just want to talk, feel free to say hi after; otherwise, you can find me online at MikeMahoney218 or my website, mm218 dot dev. Thanks!</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 <div class="footer footer-default">
 <p>spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023</p>
 </div>
