@@ -66,6 +66,16 @@ splits_pal <- c(data_color, train_color, test_color)
 Before I get into that, I want to introduce myself quickly -- I'm Mike and I'm currently a PhD candidate in environmental science, but the work I'm going to talk about today actually comes from this past summer when I was an intern with the tidymodels team at Posit working on cross validation in tidymodels.
 :::
 
+---
+
+![](tidymodels.png)
+
+::: footer
+<a href="https://www.tidymodels.org/">https://www.tidymodels.org/</a>
+
+spatialsample: A tidy approach to spatial cross-validation - https://mm218.dev/boston_useR_2023
+:::
+
 ## Data splitting:
 
 ```{r data_split, dev='svglite', echo = FALSE}
@@ -203,8 +213,6 @@ library(tidymodels)
 rsample::vfold_cv(spatialsample::boston_canopy) |> head()
 ```
 
-<br />
-
 . . .
 
 ```{r}
@@ -256,7 +264,7 @@ And so if you split this up at random, you're going to get pretty highly related
 
 ---
 
-![](https://raw.githubusercontent.com/rstudio/hex-stickers/main/PNG/spatialsample.png){.quarto-figure-center}
+![](spatialsample.png){.quarto-figure-center}
 
 :::{.notes}
 So this is where spatialsample comes in. spatialsample is a newer tidymodels package that helps you do spatial cross-validation, where you assign data to folds based on its spatial location rather than just at random.
@@ -363,8 +371,6 @@ workflow() |>
   fit_resamples(vfold_cv(spatialsample::boston_canopy)) |> 
   collect_metrics()
 ```
-
-<br/>
 
 . . .
 
